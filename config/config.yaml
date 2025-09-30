@@ -1,0 +1,194 @@
+# Trade Sourcer Configuration
+
+# Analysis Settings
+analysis:
+  # Run analysis on these days (0=Monday, 6=Sunday)
+  schedule_days: [5, 6]  # Saturday and Sunday
+  schedule_time: "08:00"  # Run at 8 AM
+  
+  # Lookback periods
+  historical_days: 365  # 1 year of historical data
+  
+# Stock Universe Filters
+filters:
+  # Basic filters
+  min_market_cap: 100_000_000  # €100M minimum
+  min_avg_volume: 100_000  # 100K shares per day
+  min_price: 1.0  # Minimum €1 per share
+  max_price: 10000  # Maximum €10K per share
+  
+  # Quality filters
+  min_altman_z: 1.8  # Bankruptcy risk threshold
+  max_debt_to_equity: 2.0  # Maximum leverage
+  min_current_ratio: 1.0  # Liquidity requirement
+  
+  # Growth filters (VC approach)
+  min_revenue_growth: 0.15  # 15% YoY minimum
+  min_gross_margin: 0.20  # 20% minimum gross margin
+
+# Scoring Weights (must sum to 1.0)
+scoring:
+  innovation_weight: 0.25
+  growth_weight: 0.25
+  team_weight: 0.15
+  risk_reward_weight: 0.20
+  technical_weight: 0.15
+  
+  # Minimum score to include in report (0-100)
+  min_composite_score: 60
+
+# Technical Indicators
+technical_indicators:
+  # RSI settings
+  rsi_period: 14
+  rsi_oversold: 30
+  rsi_overbought: 70
+  
+  # MACD settings
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  
+  # Moving averages
+  sma_short: 20
+  sma_medium: 50
+  sma_long: 200
+  
+  # Bollinger Bands
+  bb_period: 20
+  bb_std: 2
+  
+  # Volume
+  volume_ma_period: 20
+  volume_surge_threshold: 1.5  # 150% of average
+
+# Fundamental Indicators
+fundamental_indicators:
+  # Growth metrics
+  revenue_growth_periods: [1, 3]  # YoY and 3-year CAGR
+  earnings_growth_periods: [1, 3]
+  
+  # Profitability
+  track_gross_margin: true
+  track_operating_margin: true
+  track_net_margin: true
+  track_roic: true
+  track_roe: true
+  
+  # Valuation
+  max_pe_ratio: 100  # For growth stocks
+  max_peg_ratio: 3.0
+  max_ps_ratio: 20  # For early-stage growth
+
+# Risk Management
+risk_management:
+  # Position sizing
+  max_position_size: 0.15  # 15% per stock
+  max_sector_exposure: 0.40  # 40% per sector
+  min_cash_reserve: 0.20  # 20% cash buffer
+  
+  # Stop losses
+  default_stop_loss: 0.15  # 15% below entry
+  trailing_stop: 0.20  # 20% trailing stop
+  
+  # Risk/reward
+  min_risk_reward_ratio: 3.0  # 3:1 minimum
+
+# Reporting
+reporting:
+  # Report configuration
+  top_ideas_count: 5
+  detailed_analysis_count: 20
+  watchlist_count: 30
+  
+  # Output formats
+  generate_html: true
+  generate_pdf: true
+  generate_csv: true
+  generate_excel: true
+  
+  # Report sections
+  include_charts: true
+  include_sector_breakdown: true
+  include_risk_analysis: true
+  include_backtesting_results: false  # Enable after backtesting implementation
+  
+  # Report storage
+  output_directory: "reports"
+  archive_old_reports: true
+  archive_days: 90
+
+# Notifications
+notifications:
+  enabled: true
+  email_enabled: false  # Set to true and configure SMTP
+  console_summary: true
+  
+  # Email settings (if enabled)
+  email:
+    smtp_server: ""
+    smtp_port: 587
+    sender_email: ""
+    recipient_emails: []
+    use_tls: true
+
+# Data Sources
+data_sources:
+  # Primary market data source
+  primary_source: "yfinance"  # Options: yfinance, alpha_vantage, polygon
+  
+  # API keys (store in .env file or secrets.yaml)
+  alpha_vantage_key: "${ALPHA_VANTAGE_API_KEY}"
+  finnhub_key: "${FINNHUB_API_KEY}"
+  polygon_key: "${POLYGON_API_KEY}"
+  
+  # Data caching
+  cache_enabled: true
+  cache_directory: "data/cache"
+  cache_expiry_hours: 24
+  
+  # Rate limiting
+  requests_per_minute: 5
+  retry_attempts: 3
+  retry_delay: 5
+
+# Trade Republic Specific
+trade_republic:
+  # Stock universe update
+  update_universe_weekly: true
+  universe_file: "data/trade_republic_stocks.csv"
+  
+  # Supported exchanges (Trade Republic typically offers)
+  supported_exchanges:
+    - "XETRA"  # Frankfurt
+    - "NYSE"
+    - "NASDAQ"
+    - "LSE"  # London
+    - "EPA"  # Euronext Paris
+  
+  # Exclude certain types
+  exclude_etfs: false
+  exclude_crypto: true
+  exclude_forex: true
+
+# Backtesting (optional)
+backtesting:
+  enabled: false
+  start_date: "2020-01-01"
+  end_date: "2023-12-31"
+  initial_capital: 100_000
+  commission: 0.001  # 0.1% per trade
+  slippage: 0.001  # 0.1% slippage
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_file: "logs/trade_sourcer.log"
+  log_rotation: "daily"
+  log_retention_days: 30
+
+# Development
+development:
+  debug_mode: false
+  use_sample_data: false
+  sample_stock_count: 10
