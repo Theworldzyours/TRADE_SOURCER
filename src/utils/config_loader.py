@@ -22,7 +22,7 @@ class Config:
         load_dotenv()
         
         # Determine paths
-        self.base_dir = Path(__file__).parent.parent
+        self.base_dir = Path(__file__).parent.parent.parent
         if config_path is None:
             config_path = self.base_dir / "config" / "config.yaml"
         
