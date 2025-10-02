@@ -141,6 +141,7 @@ reports/*.html
 reports/*.pdf
 reports/*.png
 !reports/.gitkeep
+!reports/example_report.html
 
 # Config with sensitive data
 config/secrets.yaml
