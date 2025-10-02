@@ -17,6 +17,7 @@ from src.data_sources.trade_republic import TradeRepublicUniverse
 from src.data_sources.market_data import MarketDataFetcher
 from src.indicators.technical import TechnicalIndicators
 from src.indicators.fundamental import FundamentalIndicators
+from src.indicators.volatility import VolatilityAnalyzer
 from src.scoring.vc_scorer import VCScorer
 from src.ranking.ranker import StockRanker
 from src.reports.report_generator import ReportGenerator
@@ -58,6 +59,9 @@ class TradeSourcer:
         
         fundamental_config = self.config.get('fundamental_indicators', {})
         self.fundamental_analyzer = FundamentalIndicators(fundamental_config)
+        
+        # Add volatility analyzer for next week predictions
+        self.volatility_analyzer = VolatilityAnalyzer()
         
         scoring_config = self.config.get('scoring', {})
         self.scorer = VCScorer(scoring_config)
@@ -173,6 +177,9 @@ class TradeSourcer:
         # Technical analysis
         technical_data = self.technical_analyzer.analyze_all(df, ticker)
         
+        # Volatility and next week analysis
+        volatility_data = self.volatility_analyzer.analyze_all(df, ticker)
+        
         # Fundamental analysis
         fundamental_data = self.fundamental_analyzer.analyze_stock(ticker, info, financials)
         
@@ -191,6 +198,7 @@ class TradeSourcer:
             'ticker': ticker,
             **fundamental_data,
             **technical_data,
+            **volatility_data,
             **scores,
             'conviction': conviction,
             'position_size': position_size,

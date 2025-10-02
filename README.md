@@ -1,17 +1,22 @@
 # 📊 Trade Sourcer
 
-> A Venture Capital approach to public markets - Systematic weekend stock analysis for high-quality trading opportunities
+> A Venture Capital approach to public markets - Systematic weekend stock analysis for **next week's trading opportunities**
 
 ## Overview
 
 Trade Sourcer is an intelligent stock analysis application that evaluates leading indicators on weekends to source high-quality trading ideas for the upcoming week. It focuses exclusively on stocks tradable on Trade Republic and applies a venture capital investment framework to public equities.
 
+**NEW**: Now includes **volatility analysis** and **next week price predictions** with indicative change intervals!
+
 ## 🎯 Key Features
 
+- **Next Week Focus**: Analysis specifically designed for Monday-Friday trading opportunities
+- **Volatility Analysis**: Comprehensive volatility metrics including historical, Parkinson, and ATR
+- **Price Predictions**: Next week expected ranges with bear, base, and bull scenarios
 - **Weekend Analysis**: Automated analysis runs on weekends to prepare for Monday trading
 - **Trade Republic Focus**: Analyzes only stocks available on Trade Republic platform
 - **VC Approach**: Evaluates stocks like a VC evaluates startups - growth, innovation, execution
-- **Multi-Factor Scoring**: Combines technical, fundamental, and qualitative factors
+- **Multi-Factor Scoring**: Combines technical, fundamental, volatility, and qualitative factors
 - **Risk-Adjusted Rankings**: Categorizes opportunities by risk profile
 - **Beautiful Reports**: Generates comprehensive HTML and CSV reports
 - **Sector Diversification**: Ensures portfolio diversification guidelines
@@ -28,6 +33,9 @@ The application consists of several key modules:
 ### Analysis Engines
 - **Technical Indicators**: RSI, MACD, Bollinger Bands, volume analysis
 - **Fundamental Indicators**: Growth rates, margins, ROE, quality metrics
+- **Volatility Analysis**: Historical volatility, Parkinson volatility, ATR, regime analysis
+- **Next Week Predictions**: Expected price ranges with confidence intervals
+- **Scenario Generation**: Bear, base, and bull case scenarios for upcoming week
 - **VC Scoring**: Innovation, growth, team/execution, risk/reward analysis
 
 ### Output
@@ -132,9 +140,16 @@ Unlike traditional stock screening, this application focuses on:
 ### Report Format
 
 Reports are generated in multiple formats:
-- **HTML**: Beautiful, interactive report with charts
+- **HTML**: Beautiful, interactive report with charts and next week predictions
 - **CSV**: Raw data for further analysis
 - **Console**: Quick summary printed to terminal
+
+Each stock includes:
+- **Current Analysis**: Technical and fundamental scores
+- **Next Week Outlook**: Expected price range with confidence levels
+- **Volatility Metrics**: Historical volatility and regime analysis  
+- **Scenarios**: Bear (-1σ), Base (trend), Bull (+1σ) price targets
+- **Position Sizing**: Conviction-based allocation recommendations
 
 ## 🛠️ Advanced Usage
 

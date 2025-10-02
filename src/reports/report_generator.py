@@ -196,6 +196,7 @@ class ReportGenerator:
 <body>
     <div class="report-header">
         <h1>📊 Trade Sourcer - Weekend Report</h1>
+        <h2 style="color: #ecf0f1; font-weight: normal;">Next Week Trading Opportunities</h2>
         <p><strong>Analysis Date:</strong> {{ date }}</p>
         <p><strong>Total Opportunities:</strong> {{ total_stocks }}</p>
     </div>
@@ -203,7 +204,8 @@ class ReportGenerator:
     <div class="summary">
         <h2>Executive Summary</h2>
         <p>This weekend's analysis identified <strong>{{ total_stocks }}</strong> high-quality trading opportunities 
-        using a Venture Capital approach to public markets. The top 5 ideas are highlighted below.</p>
+        for the upcoming week using a Venture Capital approach to public markets. Each stock includes volatility analysis 
+        and predicted price ranges for next week's trading.</p>
     </div>
     
     {% if warnings %}
@@ -217,7 +219,7 @@ class ReportGenerator:
     </div>
     {% endif %}
     
-    <h2>🌟 Top 5 Ideas</h2>
+    <h2>🌟 Top 5 Ideas for Next Week</h2>
     {% for stock in top_5 %}
     <div class="stock-card">
         <div class="stock-header">
@@ -236,6 +238,21 @@ class ReportGenerator:
             <strong>Price:</strong> ${{ "%.2f"|format(stock.current_price) }} |
             <strong>Market Cap:</strong> {{ stock.market_cap_display }}
         </div>
+        
+        {% if stock.next_week_lower %}
+        <div style="margin: 15px 0; padding: 12px; background-color: #e3f2fd; border-radius: 3px; border-left: 4px solid #2196f3;">
+            <strong>📈 Next Week Outlook:</strong><br/>
+            <div style="margin-top: 8px;">
+                <strong>Expected Range:</strong> ${{ "%.2f"|format(stock.next_week_lower) }} - ${{ "%.2f"|format(stock.next_week_upper) }}
+                ({{ "%.1f"|format(stock.next_week_lower_pct) }}% to {{ "%.1f"|format(stock.next_week_upper_pct) }}%)<br/>
+                <strong>Volatility:</strong> {{ "%.1f"|format(stock.weekly_volatility) }}% weekly | 
+                {{ stock.volatility_regime|replace("_", " ")|title }}<br/>
+                <div style="margin-top: 5px; font-size: 12px; color: #555;">
+                    {{ stock.volatility_description }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
         
         <div class="metrics">
             <div class="metric">
@@ -392,6 +409,15 @@ class ReportGenerator:
                 'position_size': row.get('position_size', 0),
                 'revenue_growth': row.get('revenue_growth', 0),
                 'gross_margin': row.get('gross_margin', 0),
+                # Volatility and next week predictions
+                'next_week_lower': row.get('next_week_lower', None),
+                'next_week_upper': row.get('next_week_upper', None),
+                'next_week_lower_pct': row.get('next_week_lower_pct', 0),
+                'next_week_upper_pct': row.get('next_week_upper_pct', 0),
+                'weekly_volatility': row.get('weekly_volatility', 0),
+                'volatility_regime': row.get('volatility_regime', 'N/A'),
+                'volatility_description': row.get('volatility_description', ''),
+                'historical_volatility_20d': row.get('historical_volatility_20d', 0),
             }
             stocks.append(stock_data)
         
