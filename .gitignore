@@ -140,6 +140,7 @@ data/cache/
 reports/*.html
 reports/*.pdf
 reports/*.png
+reports/*.csv
 !reports/.gitkeep
 !reports/example_report.html
 
