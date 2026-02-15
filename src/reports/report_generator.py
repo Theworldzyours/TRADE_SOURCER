@@ -74,16 +74,34 @@ class ReportGenerator:
         
         html_template = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trade Sourcer - Weekend Report {{ date }}</title>
     <style>
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            padding: 8px;
+            background: #000;
+            color: #fff;
+            z-index: 100;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+        *:focus {
+            outline: 2px solid #3498db;
+            outline-offset: 2px;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
+            line-height: 1.5;
         }
         h1 {
             color: #2c3e50;
@@ -153,7 +171,7 @@ class ReportGenerator:
         }
         .metric-label {
             font-size: 12px;
-            color: #7f8c8d;
+            color: #555555;
             text-transform: uppercase;
         }
         .metric-value {
@@ -189,26 +207,31 @@ class ReportGenerator:
             padding-top: 20px;
             border-top: 2px solid #bdc3c7;
             text-align: center;
-            color: #7f8c8d;
+            color: #555555;
         }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="report-header">
         <h1>📊 Trade Sourcer - Weekend Report</h1>
         <h2 style="color: #ecf0f1; font-weight: normal;">Next Week Trading Opportunities</h2>
         <p><strong>Analysis Date:</strong> {{ date }}</p>
         <p><strong>Total Opportunities:</strong> {{ total_stocks }}</p>
     </div>
-    
+
+    <main id="main-content" role="main">
+    <section aria-label="Executive Summary">
     <div class="summary">
         <h2>Executive Summary</h2>
-        <p>This weekend's analysis identified <strong>{{ total_stocks }}</strong> high-quality trading opportunities 
-        for the upcoming week using a Venture Capital approach to public markets. Each stock includes volatility analysis 
+        <p>This weekend's analysis identified <strong>{{ total_stocks }}</strong> high-quality trading opportunities
+        for the upcoming week using a Venture Capital approach to public markets. Each stock includes volatility analysis
         and predicted price ranges for next week's trading.</p>
     </div>
-    
+    </section>
+
     {% if warnings %}
+    <section aria-label="Diversification Warnings">
     <div class="warning">
         <h3>⚠️ Diversification Warnings</h3>
         <ul>
@@ -217,35 +240,38 @@ class ReportGenerator:
         {% endfor %}
         </ul>
     </div>
+    </section>
     {% endif %}
-    
+
+    <section aria-label="Top 5 stock ideas for next week">
     <h2>🌟 Top 5 Ideas for Next Week</h2>
+    {% if top_5 %}
     {% for stock in top_5 %}
-    <div class="stock-card">
-        <div class="stock-header">
+    <article class="stock-card">
+        <header class="stock-header">
             <div>
-                <div class="ticker">{{ stock.ticker }}</div>
-                <div style="color: #7f8c8d;">{{ stock.company_name }}</div>
+                <h3 class="ticker">{{ stock.ticker }}</h3>
+                <div style="color: #555555;">{{ stock.company_name }}</div>
             </div>
             <div class="score score-{{ stock.grade_class }}">
                 {{ stock.composite_score }}
                 <div style="font-size: 14px;">{{ stock.grade }}</div>
             </div>
-        </div>
-        
+        </header>
+
         <div style="margin: 10px 0;">
-            <strong>Sector:</strong> {{ stock.sector }} | 
+            <strong>Sector:</strong> {{ stock.sector }} |
             <strong>Price:</strong> ${{ "%.2f"|format(stock.current_price) }} |
             <strong>Market Cap:</strong> {{ stock.market_cap_display }}
         </div>
-        
+
         {% if stock.next_week_lower %}
         <div style="margin: 15px 0; padding: 12px; background-color: #e3f2fd; border-radius: 3px; border-left: 4px solid #2196f3;">
             <strong>📈 Next Week Outlook:</strong><br/>
             <div style="margin-top: 8px;">
                 <strong>Expected Range:</strong> ${{ "%.2f"|format(stock.next_week_lower) }} - ${{ "%.2f"|format(stock.next_week_upper) }}
                 ({{ "%.1f"|format(stock.next_week_lower_pct) }}% to {{ "%.1f"|format(stock.next_week_upper_pct) }}%)<br/>
-                <strong>Volatility:</strong> {{ "%.1f"|format(stock.weekly_volatility) }}% weekly | 
+                <strong>Volatility:</strong> {{ "%.1f"|format(stock.weekly_volatility) }}% weekly |
                 {{ stock.volatility_regime|replace("_", " ")|title }}<br/>
                 <div style="margin-top: 5px; font-size: 12px; color: #555;">
                     {{ stock.volatility_description }}
@@ -253,7 +279,7 @@ class ReportGenerator:
             </div>
         </div>
         {% endif %}
-        
+
         <div class="metrics">
             <div class="metric">
                 <div class="metric-label">Innovation Score</div>
@@ -280,20 +306,31 @@ class ReportGenerator:
                 <div class="metric-value">{{ stock.conviction }}</div>
             </div>
         </div>
-        
+
         <div style="margin-top: 15px; padding: 10px; background-color: #e8f5e9; border-radius: 3px;">
             <strong>💡 Position Sizing:</strong> {{ "%.1f"|format(stock.position_size * 100) }}% of portfolio
         </div>
-    </div>
+    </article>
     {% endfor %}
-    
+    {% else %}
+    <div class="stock-card">
+        <p><strong>No stocks matched your criteria.</strong></p>
+        <p>Current filters: {{ filter_summary }}</p>
+        <p style="margin-top: 10px; color: #555;">Try loosening your filter thresholds in <code>config/config.yaml</code></p>
+    </div>
+    {% endif %}
+    </section>
+
+    <section aria-label="Sector Allocation">
     <h2>📊 Sector Allocation</h2>
+    <div style="overflow-x: auto;">
     <table class="sector-table">
+        <caption>Sector allocation and stock distribution</caption>
         <thead>
             <tr>
-                <th>Sector</th>
-                <th>Count</th>
-                <th>Percentage</th>
+                <th scope="col">Sector</th>
+                <th scope="col">Count</th>
+                <th scope="col">Percentage</th>
             </tr>
         </thead>
         <tbody>
@@ -306,18 +343,24 @@ class ReportGenerator:
         {% endfor %}
         </tbody>
     </table>
-    
+    </div>
+    </section>
+
+    <section aria-label="Complete stock list">
     <h2>📋 Complete List (Top {{ total_stocks }})</h2>
+    {% if all_stocks %}
+    <div style="overflow-x: auto;">
     <table class="sector-table">
+        <caption>Complete ranked list of top trading opportunities</caption>
         <thead>
             <tr>
-                <th>Rank</th>
-                <th>Ticker</th>
-                <th>Company</th>
-                <th>Sector</th>
-                <th>Score</th>
-                <th>Grade</th>
-                <th>Price</th>
+                <th scope="col">Rank</th>
+                <th scope="col">Ticker</th>
+                <th scope="col">Company</th>
+                <th scope="col">Sector</th>
+                <th scope="col">Score</th>
+                <th scope="col">Grade</th>
+                <th scope="col">Price</th>
             </tr>
         </thead>
         <tbody>
@@ -334,11 +377,19 @@ class ReportGenerator:
         {% endfor %}
         </tbody>
     </table>
-    
-    <div class="footer">
+    </div>
+    {% else %}
+    <div class="stock-card">
+        <p>No stocks to display. All candidates were filtered out by the current criteria.</p>
+    </div>
+    {% endif %}
+    </section>
+    </main>
+
+    <footer class="footer">
         <p>Generated by Trade Sourcer - Venture Capital Approach to Public Markets</p>
         <p>⚠️ This report is for informational purposes only. Not financial advice.</p>
-    </div>
+    </footer>
 </body>
 </html>
         """
@@ -346,7 +397,10 @@ class ReportGenerator:
         # Prepare data for template
         top_5 = self._prepare_stock_data(top_stocks.head(5))
         all_stocks = self._prepare_stock_data(top_stocks)
-        
+
+        # Build filter summary for empty-state messaging
+        filter_summary = self._build_filter_summary()
+
         template = Template(html_template)
         html_content = template.render(
             date=analysis_date.strftime("%Y-%m-%d %H:%M"),
@@ -354,7 +408,8 @@ class ReportGenerator:
             top_5=top_5,
             all_stocks=all_stocks,
             sectors=sector_allocation.to_dict('records') if not sector_allocation.empty else [],
-            warnings=diversification.get('warnings', [])
+            warnings=diversification.get('warnings', []),
+            filter_summary=filter_summary
         )
         
         # Save HTML file
@@ -423,6 +478,31 @@ class ReportGenerator:
         
         return stocks
     
+    def _build_filter_summary(self) -> str:
+        """Build a human-readable summary of active filter thresholds"""
+        filter_labels = {
+            'min_market_cap': 'min_market_cap',
+            'min_avg_volume': 'min_avg_volume',
+            'min_revenue_growth': 'min_revenue_growth',
+            'min_gross_margin': 'min_gross_margin',
+            'min_altman_z': 'min_altman_z',
+            'max_debt_to_equity': 'max_debt_to_equity',
+            'min_current_ratio': 'min_current_ratio',
+        }
+        parts = []
+        for key, label in filter_labels.items():
+            val = self.config.get(key)
+            if val is not None:
+                # Format large numbers
+                if isinstance(val, (int, float)) and val >= 1_000_000:
+                    formatted = f"{val/1_000_000:.0f}M"
+                elif isinstance(val, float) and val < 1:
+                    formatted = f"{val*100:.0f}%"
+                else:
+                    formatted = str(val)
+                parts.append(f"{label}={formatted}")
+        return ", ".join(parts) if parts else "default filters (see config/config.yaml)"
+
     def _generate_csv_report(self, top_stocks: pd.DataFrame, analysis_date: datetime) -> Path:
         """Generate CSV export"""
         filename = f"stocks_data_{analysis_date.strftime('%Y%m%d')}.csv"

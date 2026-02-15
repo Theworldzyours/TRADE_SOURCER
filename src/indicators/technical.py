@@ -8,6 +8,19 @@ from ..utils.logger import get_logger
 
 logger = get_logger()
 
+# Signal value constants
+SIGNAL_OVERSOLD = 'oversold'
+SIGNAL_OVERBOUGHT = 'overbought'
+SIGNAL_BULLISH = 'bullish'
+SIGNAL_BEARISH = 'bearish'
+SIGNAL_NEUTRAL = 'neutral'
+SIGNAL_STRONG_UPTREND = 'strong_uptrend'
+SIGNAL_UPTREND = 'uptrend'
+SIGNAL_DOWNTREND = 'downtrend'
+SIGNAL_VOLUME_HIGH = 'high'
+SIGNAL_VOLUME_LOW = 'low'
+SIGNAL_VOLUME_NORMAL = 'normal'
+
 
 class TechnicalIndicators:
     """Calculate technical indicators for stock data"""
@@ -36,7 +49,7 @@ class TechnicalIndicators:
         gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
         
-        rs = gain / loss
+        rs = gain / loss.replace(0, np.nan)
         rsi = 100 - (100 / (1 + rs))
         return rsi
     
@@ -127,21 +140,22 @@ class TechnicalIndicators:
         """
         return df['Close'].ewm(span=period, adjust=False).mean()
     
-    def calculate_volume_indicators(self, df: pd.DataFrame) -> Dict[str, pd.Series]:
+    def calculate_volume_indicators(self, df: pd.DataFrame, volume_ma_period: int = 20) -> Dict[str, pd.Series]:
         """
         Calculate volume-based indicators
-        
+
         Args:
             df: DataFrame with 'Close' and 'Volume' columns
-        
+            volume_ma_period: Period for volume moving average
+
         Returns:
             Dictionary with volume indicators
         """
         # On-Balance Volume (OBV)
         obv = (np.sign(df['Close'].diff()) * df['Volume']).fillna(0).cumsum()
-        
+
         # Volume Moving Average
-        volume_ma = df['Volume'].rolling(window=20).mean()
+        volume_ma = df['Volume'].rolling(window=volume_ma_period).mean()
         
         # Volume Ratio (current vs average)
         volume_ratio = df['Volume'] / volume_ma
@@ -193,7 +207,8 @@ class TechnicalIndicators:
         low_min = df['Low'].rolling(window=k_period).min()
         high_max = df['High'].rolling(window=k_period).max()
         
-        k = 100 * ((df['Close'] - low_min) / (high_max - low_min))
+        denom = (high_max - low_min).replace(0, np.nan)
+        k = 100 * ((df['Close'] - low_min) / denom)
         d = k.rolling(window=d_period).mean()
         
         return {
@@ -213,24 +228,33 @@ class TechnicalIndicators:
             Dictionary with all indicators and signals
         """
         try:
-            # Get configuration
+            # Get configuration with defaults
             rsi_period = self.config.get('rsi_period', 14)
             macd_fast = self.config.get('macd_fast', 12)
             macd_slow = self.config.get('macd_slow', 26)
             macd_signal = self.config.get('macd_signal', 9)
-            
+            bb_period = self.config.get('bb_period', 20)
+            bb_std = self.config.get('bb_std', 2)
+            sma_short = self.config.get('sma_short', 20)
+            sma_medium = self.config.get('sma_medium', 50)
+            sma_long = self.config.get('sma_long', 200)
+            volume_ma_period = self.config.get('volume_ma_period', 20)
+
             # Calculate indicators
             rsi = self.calculate_rsi(df, rsi_period)
             macd_data = self.calculate_macd(df, macd_fast, macd_slow, macd_signal)
-            bb = self.calculate_bollinger_bands(df)
-            volume_indicators = self.calculate_volume_indicators(df)
-            
+            bb = self.calculate_bollinger_bands(df, period=bb_period, std=bb_std)
+            volume_indicators = self.calculate_volume_indicators(df, volume_ma_period=volume_ma_period)
+
             # SMAs
-            sma_20 = self.calculate_sma(df, 20)
-            sma_50 = self.calculate_sma(df, 50)
-            sma_200 = self.calculate_sma(df, 200)
+            sma_20 = self.calculate_sma(df, sma_short)
+            sma_50 = self.calculate_sma(df, sma_medium)
+            sma_200 = self.calculate_sma(df, sma_long)
             
             # Get latest values
+            if df.empty:
+                return {'ticker': ticker, 'error': 'Empty DataFrame'}
+
             latest = {
                 'ticker': ticker,
                 'current_price': df['Close'].iloc[-1],
@@ -255,7 +279,7 @@ class TechnicalIndicators:
             
             return latest
         
-        except Exception as e:
+        except (KeyError, ValueError, IndexError) as e:
             logger.error(f"Error analyzing {ticker}: {e}")
             return {'ticker': ticker, 'error': str(e)}
     
@@ -271,48 +295,48 @@ class TechnicalIndicators:
             Dictionary with signals
         """
         signals = {}
-        
+
         # RSI signals
         if latest['rsi'] < 30:
-            signals['rsi'] = 'oversold'
+            signals['rsi'] = SIGNAL_OVERSOLD
         elif latest['rsi'] > 70:
-            signals['rsi'] = 'overbought'
+            signals['rsi'] = SIGNAL_OVERBOUGHT
         else:
-            signals['rsi'] = 'neutral'
-        
+            signals['rsi'] = SIGNAL_NEUTRAL
+
         # MACD signal
         if latest['macd'] > latest['macd_signal']:
-            signals['macd'] = 'bullish'
+            signals['macd'] = SIGNAL_BULLISH
         else:
-            signals['macd'] = 'bearish'
-        
+            signals['macd'] = SIGNAL_BEARISH
+
         # Trend signal
         price = latest['current_price']
         if price > latest['sma_20'] > latest['sma_50'] > latest['sma_200']:
-            signals['trend'] = 'strong_uptrend'
+            signals['trend'] = SIGNAL_STRONG_UPTREND
         elif price > latest['sma_50']:
-            signals['trend'] = 'uptrend'
+            signals['trend'] = SIGNAL_UPTREND
         elif price < latest['sma_50']:
-            signals['trend'] = 'downtrend'
+            signals['trend'] = SIGNAL_DOWNTREND
         else:
-            signals['trend'] = 'neutral'
-        
+            signals['trend'] = SIGNAL_NEUTRAL
+
         # Volume signal
         if latest['volume_ratio'] > 1.5:
-            signals['volume'] = 'high'
+            signals['volume'] = SIGNAL_VOLUME_HIGH
         elif latest['volume_ratio'] < 0.5:
-            signals['volume'] = 'low'
+            signals['volume'] = SIGNAL_VOLUME_LOW
         else:
-            signals['volume'] = 'normal'
-        
+            signals['volume'] = SIGNAL_VOLUME_NORMAL
+
         # Bollinger Bands signal
         if price < latest['bb_lower']:
-            signals['bb'] = 'oversold'
+            signals['bb'] = SIGNAL_OVERSOLD
         elif price > latest['bb_upper']:
-            signals['bb'] = 'overbought'
+            signals['bb'] = SIGNAL_OVERBOUGHT
         else:
-            signals['bb'] = 'neutral'
-        
+            signals['bb'] = SIGNAL_NEUTRAL
+
         return signals
     
     def _calculate_technical_score(self, latest: Dict, signals: Dict) -> float:
@@ -327,29 +351,29 @@ class TechnicalIndicators:
             Technical score
         """
         score = 50.0  # Start neutral
-        
+
         # RSI contribution
-        if signals['rsi'] == 'oversold':
+        if signals['rsi'] == SIGNAL_OVERSOLD:
             score += 10
-        elif signals['rsi'] == 'overbought':
+        elif signals['rsi'] == SIGNAL_OVERBOUGHT:
             score -= 10
-        
+
         # MACD contribution
-        if signals['macd'] == 'bullish':
+        if signals['macd'] == SIGNAL_BULLISH:
             score += 15
         else:
             score -= 15
-        
+
         # Trend contribution
-        if signals['trend'] == 'strong_uptrend':
+        if signals['trend'] == SIGNAL_STRONG_UPTREND:
             score += 20
-        elif signals['trend'] == 'uptrend':
+        elif signals['trend'] == SIGNAL_UPTREND:
             score += 10
-        elif signals['trend'] == 'downtrend':
+        elif signals['trend'] == SIGNAL_DOWNTREND:
             score -= 15
-        
+
         # Volume contribution
-        if signals['volume'] == 'high' and signals['trend'] in ['uptrend', 'strong_uptrend']:
+        if signals['volume'] == SIGNAL_VOLUME_HIGH and signals['trend'] in [SIGNAL_UPTREND, SIGNAL_STRONG_UPTREND]:
             score += 10
         
         # Normalize to 0-100

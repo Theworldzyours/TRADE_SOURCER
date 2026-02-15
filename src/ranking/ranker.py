@@ -38,6 +38,18 @@ class StockRanker:
                 filtered.append(stock)
         
         logger.info(f"Filtered {len(stocks_data)} stocks down to {len(filtered)}")
+
+        if len(filtered) == 0 and len(stocks_data) > 0:
+            logger.warning(
+                f"All {len(stocks_data)} stocks eliminated by filters: "
+                f"min_market_cap={self.filters.get('min_market_cap', 100_000_000)}, "
+                f"min_avg_volume={self.filters.get('min_avg_volume', 100_000)}, "
+                f"min_revenue_growth={self.filters.get('min_revenue_growth', 0.15)}, "
+                f"min_gross_margin={self.filters.get('min_gross_margin', 0.20)}, "
+                f"max_debt_to_equity={self.filters.get('max_debt_to_equity', 2.0)}, "
+                f"min_current_ratio={self.filters.get('min_current_ratio', 1.0)}"
+            )
+
         return filtered
     
     def _passes_filters(self, stock: Dict) -> bool:

@@ -61,7 +61,7 @@ class FundamentalIndicators:
             
             return result
         
-        except Exception as e:
+        except (KeyError, ValueError, TypeError) as e:
             logger.error(f"Error analyzing fundamentals for {ticker}: {e}")
             return {'ticker': ticker, 'error': str(e)}
     
@@ -102,7 +102,7 @@ class FundamentalIndicators:
                         if revenues[-1] > 0 and revenues[0] > 0:
                             cagr = (revenues[-1] / revenues[0]) ** (1/n_years) - 1
                             metrics['revenue_cagr'] = cagr
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, ZeroDivisionError) as e:
                 logger.debug(f"Could not calculate revenue CAGR: {e}")
         
         return metrics
@@ -156,10 +156,14 @@ class FundamentalIndicators:
         """
         Calculate overall fundamental score (0-100)
         Based on VC approach: growth + profitability + quality
-        
+
+        NOTE: Growth/margin scoring thresholds here are duplicated in
+        src/scoring/vc_scorer.py (_calculate_growth_score, _calculate_innovation_score).
+        Keep both files in sync when changing threshold values.
+
         Args:
             result: Dictionary with all fundamental metrics
-        
+
         Returns:
             Fundamental score
         """

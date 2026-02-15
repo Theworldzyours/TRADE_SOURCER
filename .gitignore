@@ -133,8 +133,13 @@ dmypy.json
 data/*.csv
 data/*.xlsx
 data/*.json
-data/cache/
+data/cache/*
+!data/cache/.gitkeep
 !data/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
 
 # Reports
 reports/*.html
@@ -157,6 +162,10 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+# Ralph
+.ralph/
+.ralphrc
 
 # Selenium
 chromedriver

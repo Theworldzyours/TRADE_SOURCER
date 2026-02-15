@@ -171,6 +171,70 @@ trade_republic:
   exclude_crypto: true
   exclude_forex: true
 
+# Dark Flow Signal Detection
+signals:
+  # SEC EDGAR (Form 4 insider trades, 13F institutional)
+  sec_edgar:
+    identity_email: "tradesourcer@analysis.com"  # Required by SEC
+    max_requests_per_second: 10
+    insider_lookback_days: 30
+    cluster_window_days: 14
+
+  # FINRA Dark Pool / Short Sale Volume
+  finra:
+    lookback_days: 20  # 20 trading days for trend
+    anomaly_std_threshold: 2.0  # Standard deviations for anomaly
+    cache_directory: "data/cache/finra"
+
+  # Tradier Options API
+  tradier:
+    api_key: "${TRADIER_API_KEY}"
+    unusual_volume_threshold: 3.0  # Volume / Open Interest ratio
+    very_unusual_threshold: 5.0
+    expiration_lookahead: 4  # Number of expiration dates to check
+
+  # Congressional Trading
+  congress:
+    lookback_days: 45
+    min_trade_amount: 1000  # Minimum $ amount to consider
+    cache_hours: 24
+
+  # FTD / Short Interest
+  ftd:
+    spike_threshold: 5.0  # FTD spike ratio vs average
+    severe_spike_threshold: 10.0
+    cache_directory: "data/cache/ftd"
+
+  # Social Sentiment (ApeWisdom)
+  social:
+    pages_to_fetch: 3  # API pages (top ~100 tickers)
+    velocity_threshold: 3.0  # 3x acceleration = signal
+    cache_minutes: 60
+
+# Conviction Engine Weights (must sum to 1.0)
+conviction:
+  weights:
+    insider_flow: 0.20
+    dark_pool: 0.15
+    options_flow: 0.15
+    fundamental: 0.15
+    technical: 0.10
+    congress: 0.05
+    social: 0.05
+    ftd_short: 0.05
+    whale_13f: 0.05
+    volatility: 0.05
+  # Signal confluence thresholds
+  dark_flow_alert_min_signals: 3  # 3+ dark signals = Dark Flow Alert
+  strong_signal_min_signals: 2
+  # Dark signals (for confluence counting)
+  dark_signal_keys:
+    - insider_flow
+    - dark_pool
+    - options_flow
+    - congress
+    - ftd_short
+
 # Backtesting (optional)
 backtesting:
   enabled: false

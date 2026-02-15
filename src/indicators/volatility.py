@@ -61,7 +61,7 @@ class VolatilityAnalyzer:
             Annualized Parkinson volatility (%)
         """
         # Parkinson volatility formula
-        hl_ratio = np.log(df['High'] / df['Low'])
+        hl_ratio = np.log(df['High'] / df['Low'].replace(0, np.nan))
         parkinson = np.sqrt((1 / (4 * np.log(2))) * (hl_ratio ** 2).tail(period).mean())
         
         # Annualize
@@ -221,7 +221,10 @@ class VolatilityAnalyzer:
         
         # Get trend (simple: 20-day SMA slope)
         sma_20 = df['Close'].rolling(window=20).mean()
-        trend_slope = (sma_20.iloc[-1] - sma_20.iloc[-5]) / sma_20.iloc[-5]
+        if len(sma_20.dropna()) >= 5:
+            trend_slope = (sma_20.iloc[-1] - sma_20.iloc[-5]) / sma_20.iloc[-5] if sma_20.iloc[-5] != 0 else 0.0
+        else:
+            trend_slope = 0.0
         
         # Get volatility-based ranges
         range_68 = self.predict_next_week_range(df, confidence_level=0.68)
@@ -311,7 +314,7 @@ class VolatilityAnalyzer:
                 'volatility_score': self._calculate_volatility_score(hist_vol, regime['vol_ratio'])
             }
         
-        except Exception as e:
+        except (KeyError, ValueError, IndexError) as e:
             logger.error(f"Error analyzing volatility for {ticker}: {e}")
             return {'ticker': ticker, 'error': str(e)}
     

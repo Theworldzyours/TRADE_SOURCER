@@ -1,0 +1,10 @@
+# Optional dependencies for Trade Sourcer
+# These require extra system-level setup or are only needed for specific features
+
+# Browser automation (requires ChromeDriver or geckodriver)
+# Used for scraping dynamic pages that require JavaScript rendering
+selenium~=4.10.0
+
+# C-based technical analysis (requires system TA-Lib installation)
+# Not needed — all indicators are implemented in src/indicators/technical.py
+# ta-lib~=0.4.0

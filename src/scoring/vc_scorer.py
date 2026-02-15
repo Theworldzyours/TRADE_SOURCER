@@ -131,10 +131,14 @@ class VCScorer:
         """
         Calculate growth score (0-100)
         Measures revenue and earnings growth trajectory
-        
+
+        NOTE: Growth/margin scoring thresholds here are duplicated in
+        src/indicators/fundamental.py (_calculate_fundamental_score).
+        Keep both files in sync when changing threshold values.
+
         Args:
             fundamental: Fundamental data
-        
+
         Returns:
             Growth score
         """
